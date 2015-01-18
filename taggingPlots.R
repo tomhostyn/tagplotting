@@ -55,7 +55,6 @@ if (!exists ("kReactProb")){
 # ratio new tag/total tags
 kNewTagRatio <- 1/5
 
-
 GenerateUsers <- function (num.users) {
 
   # generate Humans
@@ -212,9 +211,13 @@ saveAll <- function () {
   saveggplot(plotUsers3)
   saveggplot(plotUsers4)
   saveggplot(plotUsers5)
+  saveplot(plotUsers6)
+  saveplot(plotUsers6b)
+  saveplot(plotUsers7)
   saveggplot(plotChains1) 
   saveggplot(plotChains2)
   saveplot(plotChains3)
+  saveplot(plotChains4)
   
 }
 
@@ -305,6 +308,71 @@ plotUsers5 <- function () {
     labs (x = "Age", y = "Created tags", title="Created tags by age (relative)")
 }
 
+plotUsers6 <- function () {
+  #
+  # see if we can discover clusters in user enthusiasm as judged by tagging behaviour
+  #
+  
+  by.users <- gTags %>%
+    group_by(userID)  %>% 
+    summarize (sum = length(id)) %>%
+    inner_join(gUserPool, by="userID") %>%
+    transform(gender = (as.numeric(gender)-1)*50) %>%
+    select (sum, gender, age)
+  
+  dataMatrixOrdered <- (as.matrix (by.users))
+  
+  #  svd1 <- svd(scale(dataMatrixOrdered))  scaling does not make sense across columns ?
+  svd1 <- svd((dataMatrixOrdered))
+  par(mfrow = c(1, 3))
+  image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1])
+  plot(svd1$u[, 1], , xlab = "Row", ylab = "First left singular vector", 
+       pch = 19)
+  plot(svd1$v[, 1], xlab = "Column", ylab = "First right singular vector", pch = 19)
+}
+
+plotUsers6b <- function () {
+  #
+  # see if we can discover clusters in user enthusiasm as judged by tagging behaviour
+  #
+  
+  by.users <- gTags %>%
+    group_by(userID)  %>% 
+    summarize (sum = length(id)) %>%
+    inner_join(gUserPool, by="userID") %>%
+    transform(gender = scale(as.numeric(gender)-1),
+              sum = scale (sum),
+              age = scale(age)) %>%
+    select (sum, gender, age)
+  
+  dataMatrixOrdered <- (as.matrix (by.users))
+  
+  #  svd1 <- svd(scale(dataMatrixOrdered))  scaling does not make sense across columns ?
+  svd1 <- svd((dataMatrixOrdered))
+  par(mfrow = c(1, 3))
+  image(t(dataMatrixOrdered)[, nrow(dataMatrixOrdered):1])
+  plot(svd1$u[, 1], , xlab = "Row", ylab = "First left singular vector", 
+       pch = 19)
+  plot(svd1$v[, 1], xlab = "Column", ylab = "First right singular vector", pch = 19)
+}
+
+
+plotUsers7 <- function () {
+  #
+  # see if we can discover clusters in user enthusiasm as judged by tagging behaviour
+  # not sure how to interpret these correctly.
+  
+  by.users <- gTags %>%
+    group_by(userID)  %>% 
+    summarize (sum = length(id)) %>%
+    inner_join(gUserPool, by="userID") %>%
+    transform(gender = (as.numeric(gender)-1)*50) %>%
+    select (sum, gender, age)
+  
+  dataMatrixOrdered <- (as.matrix (by.users))
+  heatmap(dataMatrixOrdered, 
+          main="clear patterns - how to interpret ?")  
+}
 
 
 plotChains1 <- function () {
@@ -370,4 +438,20 @@ plotChains3 <- function () {
           Rowv=NA, Colv=NA, 
           scale="none",
           main="Heatmap of emotion chain length over time")
+}
+
+plotChains4 <- function () {
+  #
+  #  plot emotion tags length over time as heatmap.
+  # 
+  chain  <- gTags %>%
+    group_by(chain) %>% 
+    summarize (sum = length(id)-1)
+  
+  width = 10
+  padding <- (width - length(chain$sum) %% width) %% width
+  
+  plot <- c(chain$sum, rep(0, padding))
+  m <- matrix (rev(plot), ncol=width , byrow=TRUE)
+  image(t((m)))
 }
