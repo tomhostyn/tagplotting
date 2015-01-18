@@ -186,13 +186,27 @@ SimulateTrial <- function () {
 #
 ###############################################################################################################  
 
+kOutputDir <- "tagproject/"
+
 saveggplot <- function (plot_f){
-  filename <- paste ("tagproject/", as.character(substitute(plot_f)), ".png", sep="")
+  filename <- paste (kOutputDir, as.character(substitute(plot_f)), ".png", sep="")
   p <- plot_f()
   ggsave(filename=filename, plot=p, dpi=100)
 }
 
+saveplot <- function (plot_f){
+  filename <- paste (kOutputDir, as.character(substitute(plot_f)), ".png", sep="")
+  png(file=filename, width=480,height=480)
+  plot_f()  
+  dev.off()
+}
+
 saveAll <- function () {
+  output <- file.path(getwd(), kOutputDir)
+  if (!file.exists(output)){
+    dir.create(output)
+  }
+  
   saveggplot(plotUsers1)
   saveggplot(plotUsers2)
   saveggplot(plotUsers3)
@@ -200,6 +214,8 @@ saveAll <- function () {
   saveggplot(plotUsers5)
   saveggplot(plotChains1) 
   saveggplot(plotChains2)
+  saveplot(plotChains3)
+  
 }
 
 
@@ -337,3 +353,21 @@ plotChains2 <- function () {
     labs (x = "Response", y = "Count", title="Responses per original tag")
 }
 
+plotChains3 <- function () {
+  #
+  #  plot emotion tags length over time as heatmap.
+  # 
+  chain  <- gTags %>%
+    group_by(chain) %>% 
+    summarize (sum = length(id)-1)
+  
+  width = 10
+  padding <- (width - length(chain$sum) %% width) %% width
+  
+  plot <- c(chain$sum, rep(0, padding))
+  m <- matrix (rev(plot), ncol=width , byrow=TRUE)
+  heatmap(m, 
+          Rowv=NA, Colv=NA, 
+          scale="none",
+          main="Heatmap of emotion chain length over time")
+}
