@@ -333,6 +333,7 @@ plotChains2 <- function () {
     facet_wrap(~origTag) +
     geom_point() +
     scale_color_manual (values=cbPalette) +
+    theme(axis.text.x = element_text(angle = 90)) +
     labs (x = "Response", y = "Count", title="Responses per original tag")
 }
 
